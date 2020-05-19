@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources tools:ignore="MissingTranslation" xmlns:tools="http://schemas.android.com/tools">
+
+  <string name="username_pref_key">sc_username</string>
+  <string name="password_pref_key">sc_password</string>
+  <string name="uri_pref_key">sc_server_uri</string>
+  <string name="device_name_pref_key">sc_device_name</string>
+  <string name="registration_key_pref_key">sc_registration_key</string>
+
+</resources>

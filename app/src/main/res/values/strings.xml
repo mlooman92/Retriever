@@ -1,0 +1,25 @@
+<resources>
+  <string name="app_name">Retriever</string>
+  <string name="preference_exception_title">Preferences Exception</string>
+  <string name="ok_button_label">Ok</string>
+  <string name="registration_title">Registration</string>
+  <string name="username_label">Username</string>
+  <string name="password_title">Password</string>
+  <string name="show_password_label">Show Password</string>
+  <string name="uri_label">Base URI</string>
+  <string name="device_name_label">Device Name</string>
+  <string name="button_register_label">Register</string>
+  <string name="device_identifier_label">Registration Key</string>
+  <string name="duplicate_device_registration_warning">Device Name already registered with server for this user.</string>
+  <string name="duplicate_device_title">Duplicate Name</string>
+  <string name="response_exception_title">Response Exception</string>
+  <string name="registration_in_progress">Connecting...</string>
+  <string name="registration_failure_title">Registration Failure</string>
+  <string name="registration_success_title">Successful Registration</string>
+  <string name="registration_key_label">Registration Key:</string>
+  <string name="item_type_label">Item Type Name:</string>
+  <string name="load_item_type_title">Loading Item Types</string>
+  <string name="authorization_failure_message">Authorizaition failed.</string>
+  <string name="loading_data_message">Loading ItemTypes...</string>
+  <string name="duplicate_registration_label">Allow Reregistration</string>
+</resources>

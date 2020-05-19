@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  xmlns:tools="http://schemas.android.com/tools">
+  <data>
+    <variable name="registrationData"
+      type="com.matthewlooman.retriever.model.RegistrationData" />
+    <variable
+      name="registrationViewModel"
+      type="com.matthewlooman.retriever.ui.view.RegistrationViewModel" />
+
+  </data>
+
+  <androidx.constraintlayout.widget.ConstraintLayout
+    android:id="@+id/registration"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.registration.RegistrationFragment">
+
+
+    <TextView
+      android:id="@+id/textViewRegistrationTitle"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="9dp"
+      android:layout_marginEnd="9dp"
+      android:text="@string/registration_title"
+      android:textAlignment="center"
+      android:textSize="24sp"
+      app:layout_constraintBottom_toTopOf="@+id/textViewProgressUpdate"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toTopOf="parent" />
+
+
+    <TextView
+      android:id="@+id/textViewProgressUpdate"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginTop="40dp"
+      android:text=""
+      android:visibility="gone"
+      app:layout_constraintBottom_toTopOf="@+id/progressBar"
+      app:layout_constraintTop_toBottomOf="@+id/textViewRegistrationTitle"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintEnd_toEndOf="parent"
+      tools:layout_editor_absoluteX="18dp" />
+
+    <ProgressBar
+      android:id="@+id/progressBar"
+      android:layout_width="383dp"
+      android:layout_height="43dp"
+      android:visibility="gone"
+      app:layout_constraintTop_toBottomOf="@+id/textViewProgressUpdate"
+      app:layout_constraintBottom_toTopOf="@+id/editTextUsername"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintEnd_toEndOf="parent" />
+
+    <EditText
+      android:id="@+id/editTextUsername"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="9dp"
+      android:layout_marginEnd="9dp"
+      android:ems="10"
+      android:hint="@string/username_label"
+      android:text="@={registrationData.username}"
+      app:layout_constraintBottom_toTopOf="@+id/editTextPassword"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@+id/textViewRegistrationTitle" />
+
+    <EditText
+      android:id="@+id/editTextPassword"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="9dp"
+      android:layout_marginEnd="9dp"
+      android:ems="10"
+      android:hint="@string/password_title"
+      android:text="@={registrationData.password}"
+      android:inputType="textPassword"
+      app:layout_constraintBottom_toTopOf="@+id/checkBoxShowPassword"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@+id/editTextUsername" />
+
+    <CheckBox
+      android:id="@+id/checkBoxShowPassword"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="9dp"
+      android:layout_marginEnd="9dp"
+      android:text="@string/show_password_label"
+      android:onCheckedChanged="@{() -> registrationViewModel.onShowPassword(checkBoxShowPassword,editTextPassword)}"
+      app:layout_constraintBottom_toTopOf="@+id/editTextUri"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@+id/editTextPassword" />
+
+    <EditText
+      android:id="@+id/editTextUri"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="9dp"
+      android:layout_marginEnd="9dp"
+      android:ems="10"
+      android:hint="@string/uri_label"
+      android:text="@={registrationData.uri}"
+      android:inputType="textUri|textEmailAddress"
+      app:layout_constraintBottom_toTopOf="@+id/editTextDeviceName"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@+id/checkBoxShowPassword" />
+
+    <EditText
+      android:id="@+id/editTextDeviceName"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="9dp"
+      android:layout_marginEnd="9dp"
+      android:ems="10"
+      android:hint="@string/device_name_label"
+      android:text="@={registrationData.deviceName}"
+      app:layout_constraintBottom_toTopOf="@+id/checkBoxDuplicateRegistration"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@+id/editTextUri" />
+
+    <CheckBox
+      android:id="@+id/checkBoxDuplicateRegistration"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="9dp"
+      android:layout_marginEnd="9dp"
+      android:text="@string/duplicate_registration_label"
+      app:layout_constraintBottom_toTopOf="@+id/buttonRegister"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@+id/editTextDeviceName" />
+
+    <Button
+      android:id="@+id/buttonRegister"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginBottom="89dp"
+      android:text="@string/button_register_label"
+      android:onClick="@{() -> registrationViewModel.onRegisterClient(registrationData)}"
+      app:layout_constraintBottom_toBottomOf="parent"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@+id/checkBoxDuplicateRegistration" />
+
+    <TextView
+      android:id="@+id/registrationKey"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="@={registrationData.registrationKey}"
+      app:layout_constraintBottom_toBottomOf="parent"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@+id/buttonRegister" />
+
+
+  </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>
