@@ -27,28 +27,27 @@ public class MainActivity extends AppCompatActivity {
 //            this.getResources().getString(R.string.registration_key_pref_key)
 //            , null
 //    );
-    if(registrationKey==null){
-      if(registrationKey == null) {
-        // Open the Registration activity
-        Intent intent = new Intent(this, RegistrationActivity.class);
-        startActivity(intent);
+    if(registrationKey == null) {
+      // Open the Registration activity
+      Intent intent = new Intent(this, RegistrationActivity.class);
+      startActivity(intent);
 
-      }
-      else {
-        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-        builder.setTitle("PLACEHOLDER")
-                .setMessage("This should be moving to the Home Activity")
-                .setPositiveButton(R.string.ok_button_label, (dialog, id) -> {
-                  // Just close the dialog
-                });
-        builder.create().show();
+    }
+    else {
+      AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+      builder.setTitle("PLACEHOLDER")
+              .setMessage("This should be moving to the Home Activity")
+              .setPositiveButton(R.string.ok_button_label, (dialog, id) -> {
+                // Just close the dialog
+              });
+      builder.create().show();
 //        // Open the Home Screen activity
 //        Intent intent = new Intent(this,HomeActivity.class);
 //        startActivity(intent);
-      }
-
-      // Close this screen.
-
     }
+
+    // Close this screen.
+
+
   }
 }

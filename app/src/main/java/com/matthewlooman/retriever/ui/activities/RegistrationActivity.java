@@ -15,19 +15,18 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 
+import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 import com.matthewlooman.retriever.R;
 import com.matthewlooman.retriever.RetrieverApp;
 import com.matthewlooman.retriever.databinding.ActivityRegistrationBinding;
+import com.matthewlooman.retriever.model.ItemType;
+import com.matthewlooman.retriever.model.RegistrationData;
 import com.matthewlooman.retriever.repository.Repository;
 import com.matthewlooman.retriever.rest.exception.DuplicateDeviceNameException;
 import com.matthewlooman.retriever.rest.exception.ResponseException;
-import com.matthewlooman.retriever.rest.network.ItemTypeService;
 import com.matthewlooman.retriever.rest.network.RegistrationService;
 import com.matthewlooman.retriever.rest.network.RetrofitClientInstance;
-import com.matthewlooman.retriever.rest.resource.Item;
-import com.matthewlooman.retriever.rest.resource.ItemTypeResource;
-import com.matthewlooman.retriever.model.RegistrationData;
 import com.matthewlooman.retriever.rest.resource.ServerRegistration;
 import com.matthewlooman.retriever.ui.view.RegistrationContract;
 import com.matthewlooman.retriever.ui.view.RegistrationViewModel;
@@ -36,14 +35,13 @@ import javax.inject.Inject;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.annotations.NonNull;
-import io.reactivex.rxjava3.core.Single;
-import io.reactivex.rxjava3.core.SingleObserver;
+import io.reactivex.rxjava3.core.Observer;
 import io.reactivex.rxjava3.disposables.Disposable;
-import io.reactivex.rxjava3.schedulers.Schedulers;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
+
+import static com.matthewlooman.retriever.repository.Repository.*;
 
 public class RegistrationActivity extends AppCompatActivity implements RegistrationContract.View {
 
@@ -77,25 +75,19 @@ public class RegistrationActivity extends AppCompatActivity implements Registrat
             + "username: " + registrationData.getUsername() + "; "
             + "deviceName: " + registrationData.getDeviceName() + "; ";
     Log.d(TAG,message);
-//    AlertDialog.Builder builder = new AlertDialog.Builder(RegistrationActivity.this);
-//    builder.setTitle("Register Client")
-//            .setMessage(message)
-//            .setPositiveButton(R.string.ok_button_label, (dialog, id) -> {
-//              // Just close the dialog
-//            });
-//    builder.create().show();
 
     textViewProgressUpdate.setVisibility(View.VISIBLE);
     textViewProgressUpdate.setText(R.string.registration_in_progress);
     progressBar.setVisibility(View.VISIBLE);
+    findViewById(R.id.buttonRegister).setEnabled(false);
 
-    RegistrationService retrofit = RetrofitClientInstance.getRetrofitInstance(registrationData.getUri()
+    RegistrationService registrationService = RetrofitClientInstance.getRetrofitInstance(registrationData.getUri()
             ,registrationData.getUsername()
             ,registrationData.getPassword()
     )
             .create(RegistrationService.class);
 
-    Call<ServerRegistration> call = retrofit.registerDevice(registrationData.getDeviceName()
+    Call<ServerRegistration> call = registrationService.registerDevice(registrationData.getDeviceName()
             , checkBoxDuplicateRegistration.isChecked() ? "Y" : "N"
     );
 
@@ -120,8 +112,7 @@ public class RegistrationActivity extends AppCompatActivity implements Registrat
           textViewProgressUpdate.setText(R.string.loading_data_message);
           loadServerData();
 
-          progressBar.setVisibility(View.GONE);
-          textViewProgressUpdate.setVisibility(View.GONE);
+          findViewById(R.id.buttonRegister).setEnabled(true);
 //        // TODO Open the Home Screen activity
 //        Intent intent = new Intent(this,HomeActivity.class);
 //        startActivity(intent);
@@ -129,7 +120,7 @@ public class RegistrationActivity extends AppCompatActivity implements Registrat
         else {
           switch(response.code() ){
             case 401:  // Authorization Failure
-              Log.e(TAG,response.toString());
+              Log.e(TAG,R.string.authorization_failure_message + " (" + response.toString()+")");
               progressBar.setVisibility(View.GONE);
               textViewProgressUpdate.setVisibility(View.GONE);
               AlertDialog.Builder builder = new AlertDialog.Builder(RegistrationActivity.this);
@@ -196,36 +187,28 @@ public class RegistrationActivity extends AppCompatActivity implements Registrat
   }
 
   private void loadServerData() {
-    Repository repository = new Repository(mRegistrationData);
-    Retrofit retrofit = repository.getRetrofit(repository.getOkHttpClient());
-    ItemTypeService service = retrofit.create(ItemTypeService.class);
-    Single<Item<ItemTypeResource>> call = service.loadAll();
-    call.subscribeOn(Schedulers.io());
-    call.observeOn(AndroidSchedulers.mainThread());// optional if you do not wish to override the default behavior
-    call.subscribeWith(new SingleObserver<Item<ItemTypeResource>>() {
-
+    Log.d(TAG,"Loading ItemTypes");
+    mRepository.downloadItemTypes()
+            .subscribe(new Observer<ItemType>() {
       @Override
       public void onSubscribe(@NonNull Disposable d) {
-
+        textViewProgressUpdate.setText(R.string.load_item_type_message);
+        textViewProgressUpdate.setVisibility(View.VISIBLE);
+        progressBar.setVisibility(View.VISIBLE);
       }
 
       @Override
-      public void onSuccess(@NonNull Item<ItemTypeResource> item) {
-        View view = getWindow().getDecorView().getRootView();
-        String label = getApplication().getResources().getString(R.string.item_type_label);
-        for (int i = 0; i < item.getItems().size(); i++) {
-          String message = label + " " + item.getItems().get(i).getItemTypeName();
-          Snackbar snackbar = Snackbar.make(view, message, Snackbar.LENGTH_SHORT);
-          snackbar.show();
-        }
-        // TODO Add code to store ./rest/resource/ItemTypeResource as ./model/ItemType
+      public void onNext(@NonNull ItemType itemType) {
+        Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content)
+                , itemType.getItemTypeName()
+                , Snackbar.LENGTH_SHORT);
+        snackbar.show();
       }
 
       @Override
       public void onError(@NonNull Throwable e) {
-        e.printStackTrace();
         AlertDialog.Builder builder = new AlertDialog.Builder(RegistrationActivity.this);
-        builder.setTitle(R.string.load_item_type_title)
+        builder.setTitle(R.string.load_data_error_title)
                 .setMessage(e.getLocalizedMessage())
                 .setPositiveButton(R.string.ok_button_label, (dialog, id) -> {
                   // Just close the dialog
@@ -233,6 +216,12 @@ public class RegistrationActivity extends AppCompatActivity implements Registrat
         builder.create().show();
       }
 
+      @Override
+      public void onComplete() {
+        textViewProgressUpdate.setText(R.string.load_item_type_message_complete);
+        textViewProgressUpdate.setVisibility(View.VISIBLE);
+        progressBar.setVisibility(View.GONE);
+      }
     });
   }
 

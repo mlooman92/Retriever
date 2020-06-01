@@ -1,10 +1,27 @@
 package com.matthewlooman.retriever.repository;
 
+import android.content.Context;
+import android.util.Log;
+
+import androidx.room.Room;
+
+import com.matthewlooman.retriever.model.ItemType;
 import com.matthewlooman.retriever.model.RegistrationData;
+import com.matthewlooman.retriever.rest.network.ItemTypeService;
+import com.matthewlooman.retriever.rest.resource.Item;
+import com.matthewlooman.retriever.rest.resource.ItemTypeResource;
+import com.matthewlooman.retriever.room.RetrieverDatabase;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import hu.akarnokd.rxjava3.retrofit.RxJava3CallAdapterFactory;
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.annotations.NonNull;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.Observer;
+import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import okhttp3.Credentials;
 import okhttp3.Headers;
@@ -14,26 +31,27 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class Repository {
+  private final String TAG = this.getClass().getSimpleName();
   private String mAuthToken = null;
   private String mBaseUrl = null;
   private Retrofit mRetrofit = null;
+  private RetrieverDatabase mRetrieverDatabase;
 
   // region Constructors
-  public Repository(){}
-
-  public Repository(String baseUrl, String authToken){
+  public Repository(Context context , String baseUrl, String authToken){
     mBaseUrl = baseUrl;
     mAuthToken = authToken;
+    getRetrieverDatabase(context);
   }
 
-  public Repository(String baseUrl, String userName, String password){
-    mBaseUrl = baseUrl;
-    mAuthToken = Credentials.basic(userName,password);
+  public Repository(Context context, String baseUrl, String userName, String password){
+    this(context, baseUrl , Credentials.basic(userName,password));
   }
 
-  public Repository(RegistrationData registrationData){
-    mBaseUrl = registrationData.getUri();
-    mAuthToken = Credentials.basic(registrationData.getUsername(),registrationData.getPassword());
+  public Repository(Context context , RegistrationData registrationData){
+    this(context, registrationData.getUri()
+            , Credentials.basic(registrationData.getUsername(),registrationData.getPassword())
+            );
   }
   // endregion Constructors
 
@@ -80,11 +98,67 @@ public class Repository {
       mRetrofit = new retrofit2.Retrofit.Builder()
               .baseUrl(mBaseUrl)
               .addConverterFactory(GsonConverterFactory.create())
-              .addCallAdapterFactory(RxJava3CallAdapterFactory.createWithScheduler(Schedulers.io()))
+              .addCallAdapterFactory(RxJava3CallAdapterFactory.create())
               .client(client)
               .build();
     }
     return mRetrofit;
   }
 
+  public RetrieverDatabase getRetrieverDatabase(Context context) {
+    if(mRetrieverDatabase==null){
+      mRetrieverDatabase = Room.databaseBuilder(context, RetrieverDatabase.class, "RetrieverDatabase.db")
+            .build();
+    }
+    return mRetrieverDatabase;
+  }
+  // region ItemType Exposed
+  // Expose the ItemType Dao.
+  public List<ItemType> getItemTypes(){
+    return mRetrieverDatabase.itemTypeDao().getItemTypes();
+  }
+  public ItemType getItemType(String itemTypeName){
+    return mRetrieverDatabase.itemTypeDao().getItemType(itemTypeName);
+  }
+  public void deleteItemType(ItemType itemType){
+    mRetrieverDatabase.itemTypeDao().delete(itemType);
+  }
+  public void insertItemType(ItemType itemType){
+    mRetrieverDatabase.itemTypeDao().save(itemType);
+  }
+  // endregion
+
+  // region Data Load Routines
+  public Observable<ItemType> downloadItemTypes(){
+
+    Retrofit retrofit = getRetrofit(getOkHttpClient());
+    ItemTypeService itemTypeService = retrofit.create(ItemTypeService.class);
+    Observable<Item<ItemTypeResource>> call = itemTypeService.loadItemTypes(0);
+    AtomicInteger offset = new AtomicInteger();
+    offset.set(0);
+
+    Observable<ItemType> output = Observable.just(0)
+            .subscribeOn(Schedulers.io())
+            .flatMap(itemList -> itemTypeService.loadItemTypes(offset.get()))
+            .repeat()
+            .takeUntil(item -> {
+              Log.d(TAG,"incrementing offset = " + String.valueOf(item.getOffset() + item.getCount()) );
+              offset.set(item.getOffset() + item.getCount());
+              return !item.hasMore();
+            })
+            .flatMap( item -> Observable.fromIterable(item.getItems()))
+            .map(itemTypeResource -> { ItemType itemType = new ItemType();
+              itemType.setItemTypeName(itemTypeResource.getItemTypeName());
+              itemType.setItemTypeAbbreviationCode(itemTypeResource.getItemTypeAbbreviationCode());
+              itemType.setItemTypeDescription(itemTypeResource.getItemTypeDescription());
+              itemType.setItemTypeSuperTypeName(itemTypeResource.getItemTypeSuperTypeName());
+              insertItemType(itemType);
+              return itemType;
+            })
+            .observeOn(AndroidSchedulers.mainThread());
+
+    return output;
+  }
+
+  // endregion
 }

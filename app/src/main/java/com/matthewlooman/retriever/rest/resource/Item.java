@@ -1,10 +1,6 @@
 package com.matthewlooman.retriever.rest.resource;
 
-import androidx.databinding.Bindable;
-
-import com.google.android.material.tabs.TabLayout;
 import com.google.gson.annotations.SerializedName;
-import com.matthewlooman.retriever.model.ItemType;
 
 import java.util.List;
 
@@ -31,7 +27,7 @@ public class Item<T> {
 
   public void setItems(List<T> items){ this.items = items;}
 
-  public boolean isHasMore() {
+  public boolean hasMore() {
     return hasMore;
   }
 
