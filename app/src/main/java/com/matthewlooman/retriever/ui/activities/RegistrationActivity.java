@@ -21,6 +21,7 @@ import com.matthewlooman.retriever.R;
 import com.matthewlooman.retriever.RetrieverApp;
 import com.matthewlooman.retriever.databinding.ActivityRegistrationBinding;
 import com.matthewlooman.retriever.model.ItemType;
+import com.matthewlooman.retriever.model.Location;
 import com.matthewlooman.retriever.model.RegistrationData;
 import com.matthewlooman.retriever.repository.Repository;
 import com.matthewlooman.retriever.rest.exception.DuplicateDeviceNameException;
@@ -207,6 +208,8 @@ public class RegistrationActivity extends AppCompatActivity implements Registrat
 
       @Override
       public void onError(@NonNull Throwable e) {
+        Log.d(TAG,"Error Loading Data: " + e.getLocalizedMessage());
+        e.printStackTrace();
         AlertDialog.Builder builder = new AlertDialog.Builder(RegistrationActivity.this);
         builder.setTitle(R.string.load_data_error_title)
                 .setMessage(e.getLocalizedMessage())
@@ -223,6 +226,46 @@ public class RegistrationActivity extends AppCompatActivity implements Registrat
         progressBar.setVisibility(View.GONE);
       }
     });
+
+    Log.d(TAG,"Loading Locations");
+    mRepository.downloadLocations()
+            .subscribe(new Observer<Location>(){
+
+              @Override
+              public void onSubscribe(@NonNull Disposable d) {
+                textViewProgressUpdate.setText(R.string.loading_locations);
+                textViewProgressUpdate.setVisibility(View.VISIBLE);
+                progressBar.setVisibility(View.VISIBLE);
+              }
+
+              @Override
+              public void onNext(@NonNull Location location) {
+                Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content)
+                ,location.getLocationName()
+                ,Snackbar.LENGTH_SHORT);
+              }
+
+              @Override
+              public void onError(@NonNull Throwable e) {
+                Log.d(TAG,"Error Loading Data: " + e.getLocalizedMessage());
+                e.printStackTrace();
+                textViewProgressUpdate.setText(R.string.load_data_error_title);
+                progressBar.setVisibility(View.GONE);
+                AlertDialog.Builder builder = new AlertDialog.Builder(RegistrationActivity.this);
+                builder.setTitle(R.string.load_data_error_title)
+                        .setMessage(e.getLocalizedMessage())
+                        .setPositiveButton(R.string.ok_button_label,(dialog , id) -> {
+                          // just close the dialog
+                          });
+              }
+
+              @Override
+              public void onComplete() {
+                textViewProgressUpdate.setText(R.string.load_location_message_complete);
+                textViewProgressUpdate.setVisibility(View.VISIBLE);
+                progressBar.setVisibility(View.GONE);
+              }
+            });
   }
 
   @Override

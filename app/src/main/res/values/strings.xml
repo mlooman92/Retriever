@@ -22,7 +22,9 @@
   <string name="authorization_failure_message">Authorization failed.</string>
   <string name="loading_data_message">Loading ItemTypes…</string>
   <string name="duplicate_registration_label">Allow Reregistration</string>
-  <string name="load_item_type_message">Loading ItemTypes</string>
+  <string name="load_item_type_message">Loading ItemType definitions</string>
   <string name="load_data_error_title">Error Loading Data</string>
-  <string name="load_item_type_message_complete">ItemTypes Loaded.</string>
+  <string name="load_item_type_message_complete">ItemType definitions Loaded.</string>
+  <string name="loading_locations">Loading Locations</string>
+  <string name="load_location_message_complete">Locations Successfully loaded.</string>
 </resources>

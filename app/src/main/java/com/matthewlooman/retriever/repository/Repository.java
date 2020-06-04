@@ -6,22 +6,26 @@ import android.util.Log;
 import androidx.room.Room;
 
 import com.matthewlooman.retriever.model.ItemType;
+import com.matthewlooman.retriever.model.Location;
 import com.matthewlooman.retriever.model.RegistrationData;
 import com.matthewlooman.retriever.rest.network.ItemTypeService;
+import com.matthewlooman.retriever.rest.network.LocationService;
 import com.matthewlooman.retriever.rest.resource.Item;
 import com.matthewlooman.retriever.rest.resource.ItemTypeResource;
+import com.matthewlooman.retriever.rest.resource.LocationResource;
+import com.matthewlooman.retriever.room.DataTypeConverters;
 import com.matthewlooman.retriever.room.RetrieverDatabase;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import hu.akarnokd.rxjava3.retrofit.RxJava3CallAdapterFactory;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Observable;
-import io.reactivex.rxjava3.core.Observer;
-import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import okhttp3.Credentials;
 import okhttp3.Headers;
@@ -108,11 +112,13 @@ public class Repository {
   public RetrieverDatabase getRetrieverDatabase(Context context) {
     if(mRetrieverDatabase==null){
       mRetrieverDatabase = Room.databaseBuilder(context, RetrieverDatabase.class, "RetrieverDatabase.db")
-            .build();
+              .fallbackToDestructiveMigration()  // TODO REMOVE BEFORE PRODUCTION!!!!!!
+              .build();
     }
     return mRetrieverDatabase;
   }
-  // region ItemType Exposed
+
+  // region Dao Methods Exposed
   // Expose the ItemType Dao.
   public List<ItemType> getItemTypes(){
     return mRetrieverDatabase.itemTypeDao().getItemTypes();
@@ -126,6 +132,13 @@ public class Repository {
   public void insertItemType(ItemType itemType){
     mRetrieverDatabase.itemTypeDao().save(itemType);
   }
+
+  public List<Location> getLocations(){return mRetrieverDatabase.locationDao().getLocations();}
+  public Location getLocation(String locationName){return mRetrieverDatabase.locationDao().getLocation(locationName);}
+  public Location getLocation(UUID itemIdentifier){return mRetrieverDatabase.locationDao().getLocation(itemIdentifier);}
+  public void deleteLocation(Location location){mRetrieverDatabase.locationDao().delete(location);}
+  public void insertLocation(Location location){mRetrieverDatabase.locationDao().save(location);}
+
   // endregion
 
   // region Data Load Routines
@@ -147,18 +160,57 @@ public class Repository {
               return !item.hasMore();
             })
             .flatMap( item -> Observable.fromIterable(item.getItems()))
-            .map(itemTypeResource -> { ItemType itemType = new ItemType();
-              itemType.setItemTypeName(itemTypeResource.getItemTypeName());
-              itemType.setItemTypeAbbreviationCode(itemTypeResource.getItemTypeAbbreviationCode());
-              itemType.setItemTypeDescription(itemTypeResource.getItemTypeDescription());
-              itemType.setItemTypeSuperTypeName(itemTypeResource.getItemTypeSuperTypeName());
-              insertItemType(itemType);
-              return itemType;
-            })
+            .map(this::itemTypeResourceToDatabase)
             .observeOn(AndroidSchedulers.mainThread());
 
     return output;
   }
 
+  public Observable<Location> downloadLocations(){
+    Retrofit retrofit = getRetrofit(getOkHttpClient());
+    LocationService locationService = retrofit.create(LocationService.class);
+    AtomicInteger offset = new AtomicInteger();
+    offset.set(0);
+
+    Observable<Location> output = Observable.just(0)
+            .subscribeOn(Schedulers.io())
+            .flatMap(itemList -> locationService.loadLocations(offset.get()))
+            .repeat()
+            .takeUntil(item -> {
+              Log.d(TAG,"incrementing Locations offset = " + String.valueOf(item.getOffset() + item.getCount()));
+              offset.set(item.getOffset() + item.getCount());
+              return !item.hasMore();
+            })
+            .flatMap(item -> Observable.fromIterable(item.getItems()))
+            .map(this::locationResourceToDatabase)
+            .observeOn(AndroidSchedulers.mainThread());
+
+    return output;
+  }
+
+  @NotNull
+  private Location locationResourceToDatabase(@NotNull LocationResource locationResource) {
+    Log.d(TAG,"Loading location = '" + locationResource.getLocationName() + "'");
+    Location location = new Location();
+    location.setItemIdentifier(DataTypeConverters.fromStringToUUID(locationResource.getItemIdentifier()));
+    location.setItemTypeName(locationResource.getItemTypeName());
+    location.setLocationName(locationResource.getLocationName());
+    location.setLocationAbbreviationCode(locationResource.getLocationAbbreviationCode());
+    location.setLocationParentIdentifier(DataTypeConverters.fromStringToUUID(locationResource.getParentLocationIdentifier()));
+    insertLocation(location);
+    Log.d(TAG,"Location '" + location.getLocationName() + "' loaded");
+    return location;
+  }
+
+  @NotNull
+  private ItemType itemTypeResourceToDatabase(@NotNull ItemTypeResource itemTypeResource) {
+    ItemType itemType = new ItemType();
+    itemType.setItemTypeName(itemTypeResource.getItemTypeName());
+    itemType.setItemTypeAbbreviationCode(itemTypeResource.getItemTypeAbbreviationCode());
+    itemType.setItemTypeDescription(itemTypeResource.getItemTypeDescription());
+    itemType.setItemTypeSuperTypeName(itemTypeResource.getItemTypeSuperTypeName());
+    insertItemType(itemType);
+    return itemType;
+  }
   // endregion
 }
