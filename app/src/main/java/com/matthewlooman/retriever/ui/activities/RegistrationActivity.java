@@ -21,6 +21,7 @@ import com.matthewlooman.retriever.R;
 import com.matthewlooman.retriever.RetrieverApp;
 import com.matthewlooman.retriever.databinding.ActivityRegistrationBinding;
 import com.matthewlooman.retriever.model.ItemType;
+import com.matthewlooman.retriever.model.Labor;
 import com.matthewlooman.retriever.model.Location;
 import com.matthewlooman.retriever.model.RegistrationData;
 import com.matthewlooman.retriever.repository.Repository;
@@ -97,7 +98,7 @@ public class RegistrationActivity extends AppCompatActivity implements Registrat
       public void onResponse(Call<ServerRegistration> call, Response<ServerRegistration> response) {
         // Extract the registration identifier
         if(response.isSuccessful()){
-          Log.d(TAG,"SUCCESS!");
+          Log.d(TAG,"Registration Success");
           ServerRegistration serverRegistration = response.body();
           mRegistrationData.setRegistrationKey(serverRegistration.getDeviceIdentifier());
           AlertDialog.Builder builder = new AlertDialog.Builder(RegistrationActivity.this);
@@ -240,6 +241,7 @@ public class RegistrationActivity extends AppCompatActivity implements Registrat
 
               @Override
               public void onNext(@NonNull Location location) {
+                Log.d(TAG,"Location: " + location.getLocationName());
                 Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content)
                 ,location.getLocationName()
                 ,Snackbar.LENGTH_SHORT);
@@ -247,8 +249,6 @@ public class RegistrationActivity extends AppCompatActivity implements Registrat
 
               @Override
               public void onError(@NonNull Throwable e) {
-                Log.d(TAG,"Error Loading Data: " + e.getLocalizedMessage());
-                e.printStackTrace();
                 textViewProgressUpdate.setText(R.string.load_data_error_title);
                 progressBar.setVisibility(View.GONE);
                 AlertDialog.Builder builder = new AlertDialog.Builder(RegistrationActivity.this);
@@ -256,7 +256,9 @@ public class RegistrationActivity extends AppCompatActivity implements Registrat
                         .setMessage(e.getLocalizedMessage())
                         .setPositiveButton(R.string.ok_button_label,(dialog , id) -> {
                           // just close the dialog
-                          });
+                        });
+                Log.d(TAG,"Error Loading Data: " + e.getLocalizedMessage());
+                e.printStackTrace();
               }
 
               @Override
@@ -264,6 +266,43 @@ public class RegistrationActivity extends AppCompatActivity implements Registrat
                 textViewProgressUpdate.setText(R.string.load_location_message_complete);
                 textViewProgressUpdate.setVisibility(View.VISIBLE);
                 progressBar.setVisibility(View.GONE);
+              }
+            });
+
+    Log.d(TAG,"Loading Labor");
+    mRepository.downloadLabors()
+            .subscribe(new Observer<Labor>() {
+              @Override
+              public void onSubscribe(@NonNull Disposable d) {
+                textViewProgressUpdate.setText(R.string.labor_loading_title);
+              }
+
+              @Override
+              public void onNext(@NonNull Labor labor) {
+                Log.d(TAG,"Loaded: " + labor.getLaborName());
+              }
+
+              @Override
+              public void onError(@NonNull Throwable e) {
+                textViewProgressUpdate.setText(R.string.load_data_error_title);
+                progressBar.setVisibility(View.GONE);
+                AlertDialog.Builder builder = new AlertDialog.Builder(RegistrationActivity.this);
+                builder.setTitle(R.string.load_data_error_title)
+                        .setMessage(e.getLocalizedMessage())
+                        .setPositiveButton(R.string.ok_button_label,(dialog , id) -> {
+                          // just close the dialog
+                        });
+                Log.d(TAG,"Error Loading Data: " + e.getLocalizedMessage());
+                e.printStackTrace();
+              }
+
+              @Override
+              public void onComplete() {
+                Log.d(TAG,"Labor load completed");
+                textViewProgressUpdate.setText(R.string.labor_loaded_message);
+                textViewProgressUpdate.setVisibility(View.VISIBLE);
+                progressBar.setVisibility(View.GONE);
+
               }
             });
   }

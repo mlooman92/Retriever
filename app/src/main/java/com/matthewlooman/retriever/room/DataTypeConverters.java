@@ -5,21 +5,22 @@ import android.util.Log;
 import androidx.room.TypeConverter;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 public class DataTypeConverters {
   private static final String TAG = "DataTypeConverters";
   @TypeConverter
-  public static String fromLocalDateTimeToString(LocalDateTime localDateTime){
+  public static String fromLocalDateTimeToString(ZonedDateTime localDateTime){
     if(localDateTime==null) return null;
-    return localDateTime.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+    return localDateTime.format(DateTimeFormatter.ISO_INSTANT);
   }
 
   @TypeConverter
-  public static LocalDateTime fromStringToLocalDateTime(String string){
+  public static ZonedDateTime fromStringToLocalDateTime(String string){
     if(string==null) return null;
-    return LocalDateTime.parse(string,DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+    return ZonedDateTime.parse(string,DateTimeFormatter.ISO_INSTANT);
   }
 
   @TypeConverter

@@ -1,0 +1,176 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 3,
+    "identityHash": "97f4bd9a4728d6a3d4d6348ea11b6e03",
+    "entities": [
+      {
+        "tableName": "Item_Type",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`item_type_name` TEXT NOT NULL, `item_type_abbreviation_code` TEXT, `item_type_description` TEXT, `item_type_supertype_name` TEXT, PRIMARY KEY(`item_type_name`))",
+        "fields": [
+          {
+            "fieldPath": "itemTypeName",
+            "columnName": "item_type_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "itemTypeAbbreviationCode",
+            "columnName": "item_type_abbreviation_code",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "itemTypeDescription",
+            "columnName": "item_type_description",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "itemTypeSuperTypeName",
+            "columnName": "item_type_supertype_name",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "item_type_name"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "Location",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`location_name` TEXT, `location_abbreviation_code` TEXT, `location_parent_identifier` TEXT, `item_identifier` TEXT NOT NULL, `item_type_name` TEXT, `item_update_timestamp` TEXT, `item_notes_text` TEXT, PRIMARY KEY(`item_identifier`))",
+        "fields": [
+          {
+            "fieldPath": "locationName",
+            "columnName": "location_name",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "locationAbbreviationCode",
+            "columnName": "location_abbreviation_code",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "locationParentIdentifier",
+            "columnName": "location_parent_identifier",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "itemIdentifier",
+            "columnName": "item_identifier",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "itemTypeName",
+            "columnName": "item_type_name",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "itemUpdateTimestamp",
+            "columnName": "item_update_timestamp",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "itemNotesText",
+            "columnName": "item_notes_text",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "item_identifier"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "Labor",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`labor_name` TEXT, `labor_is_chargeable_flag` INTEGER NOT NULL, `labor_include_in_work` INTEGER NOT NULL, `labor_charge_to_identifier` TEXT, `parent_labor_identifier` TEXT, `item_identifier` TEXT NOT NULL, `item_type_name` TEXT, `item_update_timestamp` TEXT, `item_notes_text` TEXT, PRIMARY KEY(`item_identifier`))",
+        "fields": [
+          {
+            "fieldPath": "laborName",
+            "columnName": "labor_name",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "laborIsChargeableFlag",
+            "columnName": "labor_is_chargeable_flag",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "laborIncludeInWork",
+            "columnName": "labor_include_in_work",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "laborChargeToIdentifier",
+            "columnName": "labor_charge_to_identifier",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "parentLaborIdentifier",
+            "columnName": "parent_labor_identifier",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "itemIdentifier",
+            "columnName": "item_identifier",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "itemTypeName",
+            "columnName": "item_type_name",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "itemUpdateTimestamp",
+            "columnName": "item_update_timestamp",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "itemNotesText",
+            "columnName": "item_notes_text",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "item_identifier"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '97f4bd9a4728d6a3d4d6348ea11b6e03')"
+    ]
+  }
+}

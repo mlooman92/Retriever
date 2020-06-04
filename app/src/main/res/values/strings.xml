@@ -27,4 +27,6 @@
   <string name="load_item_type_message_complete">ItemType definitions Loaded.</string>
   <string name="loading_locations">Loading Locations</string>
   <string name="load_location_message_complete">Locations Successfully loaded.</string>
+  <string name="labor_loading_title">Labor Loading...</string>
+  <string name="labor_loaded_message">Labor Loading completed.</string>
 </resources>

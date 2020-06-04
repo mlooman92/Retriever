@@ -2,6 +2,7 @@ package com.matthewlooman.retriever.rest.resource;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 public class LocationResource {
@@ -15,7 +16,7 @@ public class LocationResource {
   String itemNotestText;
 
   @SerializedName("item_update_timestamp")
-  Date itemUpdateTimestamp;
+  String itemUpdateTimestamp;
 
   @SerializedName("location_name")
   String locationName;
@@ -50,11 +51,11 @@ public class LocationResource {
     this.itemNotestText = itemNotestText;
   }
 
-  public Date getItemUpdateTimestamp() {
+  public String getItemUpdateTimestamp() {
     return itemUpdateTimestamp;
   }
 
-  public void setItemUpdateTimestamp(Date itemUpdateTimestamp) {
+  public void setItemUpdateTimestamp(String itemUpdateTimestamp) {
     this.itemUpdateTimestamp = itemUpdateTimestamp;
   }
 
