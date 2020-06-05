@@ -9,13 +9,16 @@ import com.matthewlooman.retriever.model.ItemType;
 import com.matthewlooman.retriever.model.Labor;
 import com.matthewlooman.retriever.model.Location;
 import com.matthewlooman.retriever.model.RegistrationData;
+import com.matthewlooman.retriever.model.Transition;
 import com.matthewlooman.retriever.rest.network.ItemTypeService;
 import com.matthewlooman.retriever.rest.network.LaborService;
 import com.matthewlooman.retriever.rest.network.LocationService;
+import com.matthewlooman.retriever.rest.network.TransitionService;
 import com.matthewlooman.retriever.rest.resource.Item;
 import com.matthewlooman.retriever.rest.resource.ItemTypeResource;
 import com.matthewlooman.retriever.rest.resource.LaborResource;
 import com.matthewlooman.retriever.rest.resource.LocationResource;
+import com.matthewlooman.retriever.rest.resource.TransitionResource;
 import com.matthewlooman.retriever.room.DataTypeConverters;
 import com.matthewlooman.retriever.room.RetrieverDatabase;
 
@@ -149,6 +152,11 @@ public class Repository {
   public Labor getLabor(UUID itemIdentifier){return mRetrieverDatabase.laborDao().getLabor(itemIdentifier);}
   public void deleteLabor(Labor labor){mRetrieverDatabase.laborDao().delete(labor);}
   public void insertLabor(Labor labor){mRetrieverDatabase.laborDao().save(labor);}
+
+  public List<Transition> getTransitions(){return mRetrieverDatabase.transitionDao().getTransitions();}
+  public Transition getTransition(UUID itemIdentifier){ return mRetrieverDatabase.transitionDao().getTransition(itemIdentifier);}
+  public void deleteTransition(Transition transition){ mRetrieverDatabase.transitionDao().delete(transition);}
+  public void insertTransition(Transition transition){ mRetrieverDatabase.transitionDao().save(transition);}
   // endregion
 
   // region Data Load Routines
@@ -221,14 +229,55 @@ public class Repository {
 
   }
 
+  public Observable<Transition> downloadTransition(){
+    Retrofit retrofit = getRetrofit(getOkHttpClient());
+    TransitionService transitionService = retrofit.create(TransitionService.class);
+    AtomicInteger offset = new AtomicInteger();
+    offset.set(0);
+
+    Observable<Transition> output = Observable.just(0)
+            .subscribeOn(Schedulers.io())
+            .flatMap(itemList -> transitionService.loadTransitions(offset.get()))
+            .repeat()
+            .takeUntil(item -> {
+              offset.set(item.getOffset() + item.getCount());
+              return !item.hasMore();
+            })
+            .flatMap(item -> Observable.fromIterable(item.getItems()))
+            .map(this::transitionResourceToDatabase)
+            .observeOn(AndroidSchedulers.mainThread());
+
+    return output;
+
+  }
+
+  private Transition transitionResourceToDatabase(TransitionResource transitionResource) {
+    Log.d(TAG,"Loading Transition = '" + transitionResource.toString() + "'");
+    Transition transition = new Transition();
+    transition.setItemIdentifier(DataTypeConverters.fromStringToUUID(transitionResource.getItemIdentifier()));
+    transition.setItemTypeName(transitionResource.getItemTypeName());
+    transition.setItemUpdateTimestamp(ZonedDateTime.parse(transitionResource.getItemUpdateTimestamp()
+            ,DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSVV")));
+    transition.setItemNotesText(transitionResource.getItemNotesText());
+    transition.setTransitionItemTypeName(transitionResource.getTransitionItemTypeName());
+    transition.setTransitionFromStateName(transitionResource.getTransitionFromStateName());
+    transition.setTransitionFromStateOrdinal(transitionResource.getTransitionFromStateOrdinal());
+    transition.setTransitionToStateName(transitionResource.getTransitionToStateName());
+    transition.setTransitionToStateOrdinal(transitionResource.getTransitionToStateOrdinal());
+    transition.setTransitionReasonName(transitionResource.getTransitionReasonName());
+    transition.setTransitionReasonOrdinal(transitionResource.getTransitionReasonOrdinal());
+    transition.setTransitionDefinitionText(transitionResource.getTransitionDefinitionText());
+    insertTransition(transition);
+    Log.d(TAG,"Transition '" + transition.toString() + "' loaded");
+    return transition;
+  }
+
   @NotNull
   private Labor laborResourceToDatabase(@NotNull LaborResource laborResource) {
     Log.d(TAG,"Loading labor = '" + laborResource.getLaborName() + "'" );
     Labor labor = new Labor();
     labor.setItemIdentifier(DataTypeConverters.fromStringToUUID(laborResource.getItemIdentifier()));
     labor.setItemTypeName(laborResource.getItemTypeName());
-
-    Log.d(TAG,"laborResource.getItemUpdateTimestamp() = '" + laborResource.getItemUpdateTimestamp() + "'");
     labor.setItemUpdateTimestamp(ZonedDateTime.parse(laborResource.getItemUpdateTimestamp(), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSVV")));
     labor.setItemNotesText(laborResource.getItemNotesText());
     labor.setLaborName(laborResource.getLaborName());
@@ -247,8 +296,6 @@ public class Repository {
     Location location = new Location();
     location.setItemIdentifier(DataTypeConverters.fromStringToUUID(locationResource.getItemIdentifier()));
     location.setItemTypeName(locationResource.getItemTypeName());
-
-    Log.d(TAG,"locationResource.getItemUpdateTimestamp() = '" + locationResource.getItemUpdateTimestamp() + "'");
     location.setItemUpdateTimestamp(ZonedDateTime.parse(locationResource.getItemUpdateTimestamp(),DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssVV")));
     location.setItemNotesText(locationResource.getItemNotesText());
     location.setLocationName(locationResource.getLocationName());

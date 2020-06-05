@@ -1,0 +1,265 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 4,
+    "identityHash": "7c72bf8988258589ff864667a8fef72a",
+    "entities": [
+      {
+        "tableName": "Item_Type",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`item_type_name` TEXT NOT NULL, `item_type_abbreviation_code` TEXT, `item_type_description` TEXT, `item_type_supertype_name` TEXT, PRIMARY KEY(`item_type_name`))",
+        "fields": [
+          {
+            "fieldPath": "itemTypeName",
+            "columnName": "item_type_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "itemTypeAbbreviationCode",
+            "columnName": "item_type_abbreviation_code",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "itemTypeDescription",
+            "columnName": "item_type_description",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "itemTypeSuperTypeName",
+            "columnName": "item_type_supertype_name",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "item_type_name"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "Location",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`location_name` TEXT, `location_abbreviation_code` TEXT, `location_parent_identifier` TEXT, `item_identifier` TEXT NOT NULL, `item_type_name` TEXT, `item_update_timestamp` TEXT DEFAULT CURRENT_TIMESTAMP, `item_notes_text` TEXT, PRIMARY KEY(`item_identifier`))",
+        "fields": [
+          {
+            "fieldPath": "locationName",
+            "columnName": "location_name",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "locationAbbreviationCode",
+            "columnName": "location_abbreviation_code",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "locationParentIdentifier",
+            "columnName": "location_parent_identifier",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "itemIdentifier",
+            "columnName": "item_identifier",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "itemTypeName",
+            "columnName": "item_type_name",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "itemUpdateTimestamp",
+            "columnName": "item_update_timestamp",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "CURRENT_TIMESTAMP"
+          },
+          {
+            "fieldPath": "itemNotesText",
+            "columnName": "item_notes_text",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "item_identifier"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "Labor",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`labor_name` TEXT, `labor_is_chargeable_flag` INTEGER NOT NULL, `labor_include_in_work` INTEGER NOT NULL, `labor_charge_to_identifier` TEXT, `parent_labor_identifier` TEXT, `item_identifier` TEXT NOT NULL, `item_type_name` TEXT, `item_update_timestamp` TEXT DEFAULT CURRENT_TIMESTAMP, `item_notes_text` TEXT, PRIMARY KEY(`item_identifier`))",
+        "fields": [
+          {
+            "fieldPath": "laborName",
+            "columnName": "labor_name",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "laborIsChargeableFlag",
+            "columnName": "labor_is_chargeable_flag",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "laborIncludeInWork",
+            "columnName": "labor_include_in_work",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "laborChargeToIdentifier",
+            "columnName": "labor_charge_to_identifier",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "parentLaborIdentifier",
+            "columnName": "parent_labor_identifier",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "itemIdentifier",
+            "columnName": "item_identifier",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "itemTypeName",
+            "columnName": "item_type_name",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "itemUpdateTimestamp",
+            "columnName": "item_update_timestamp",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "CURRENT_TIMESTAMP"
+          },
+          {
+            "fieldPath": "itemNotesText",
+            "columnName": "item_notes_text",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "item_identifier"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "Transition",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`transition_item_type_name` TEXT, `transition_from_state_name` TEXT, `transition_from_state_ordinal` INTEGER NOT NULL, `transition_to_state_name` TEXT, `transition_to_state_ordinal` INTEGER NOT NULL, `transition_reason_name` TEXT, `transition_reason_ordinal` INTEGER NOT NULL, `transition_definition_text` TEXT, `item_identifier` TEXT NOT NULL, `item_type_name` TEXT, `item_update_timestamp` TEXT DEFAULT CURRENT_TIMESTAMP, `item_notes_text` TEXT, PRIMARY KEY(`item_identifier`))",
+        "fields": [
+          {
+            "fieldPath": "transitionItemTypeName",
+            "columnName": "transition_item_type_name",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "transitionFromStateName",
+            "columnName": "transition_from_state_name",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "transitionFromStateOrdinal",
+            "columnName": "transition_from_state_ordinal",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "transitionToStateName",
+            "columnName": "transition_to_state_name",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "transitionToStateOrdinal",
+            "columnName": "transition_to_state_ordinal",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "transitionReasonName",
+            "columnName": "transition_reason_name",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "transitionReasonOrdinal",
+            "columnName": "transition_reason_ordinal",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "transitionDefinitionText",
+            "columnName": "transition_definition_text",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "itemIdentifier",
+            "columnName": "item_identifier",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "itemTypeName",
+            "columnName": "item_type_name",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "itemUpdateTimestamp",
+            "columnName": "item_update_timestamp",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "CURRENT_TIMESTAMP"
+          },
+          {
+            "fieldPath": "itemNotesText",
+            "columnName": "item_notes_text",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "item_identifier"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7c72bf8988258589ff864667a8fef72a')"
+    ]
+  }
+}

@@ -24,6 +24,7 @@ import com.matthewlooman.retriever.model.ItemType;
 import com.matthewlooman.retriever.model.Labor;
 import com.matthewlooman.retriever.model.Location;
 import com.matthewlooman.retriever.model.RegistrationData;
+import com.matthewlooman.retriever.model.Transition;
 import com.matthewlooman.retriever.repository.Repository;
 import com.matthewlooman.retriever.rest.exception.DuplicateDeviceNameException;
 import com.matthewlooman.retriever.rest.exception.ResponseException;
@@ -305,6 +306,44 @@ public class RegistrationActivity extends AppCompatActivity implements Registrat
 
               }
             });
+
+    Log.d(TAG, "Loading Transition");
+    mRepository.downloadTransition()
+            .subscribe(new Observer<Transition>(){
+              @Override
+              public void onSubscribe(@NonNull Disposable d) {
+                textViewProgressUpdate.setText(R.string.load_transition_message);
+                textViewProgressUpdate.setVisibility(View.VISIBLE);
+                progressBar.setVisibility(View.GONE);
+              }
+
+              @Override
+              public void onNext(@NonNull Transition transition) {
+                Log.d(TAG,"Loaded Transition " + transition.toString());
+              }
+
+              @Override
+              public void onError(@NonNull Throwable e) {
+                textViewProgressUpdate.setText(R.string.load_data_error_title);
+                progressBar.setVisibility(View.GONE);
+                AlertDialog.Builder builder = new AlertDialog.Builder(RegistrationActivity.this);
+                builder.setTitle(R.string.load_data_error_title)
+                        .setMessage(e.getLocalizedMessage())
+                        .setPositiveButton(R.string.ok_button_label,(dialog , id) -> {
+                          // just close the dialog
+                        });
+                Log.d(TAG,"Error Loading Data: " + e.getLocalizedMessage());
+                e.printStackTrace();
+              }
+
+              @Override
+              public void onComplete() {
+                Log.d(TAG,"Transition load completed");
+                textViewProgressUpdate.setText(R.string.transition_loaded_message);
+                textViewProgressUpdate.setVisibility(View.VISIBLE);
+                progressBar.setVisibility(View.GONE);
+              }
+            });
   }
 
   @Override
@@ -315,11 +354,6 @@ public class RegistrationActivity extends AppCompatActivity implements Registrat
     } else {
       editTextPassword.setTransformationMethod(PasswordTransformationMethod.getInstance());
     }
-  }
-
-  @Override
-  public void clientRegistered() {
-
   }
 
   protected void onDestroy() {

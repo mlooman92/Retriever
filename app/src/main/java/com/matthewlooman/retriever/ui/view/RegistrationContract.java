@@ -9,13 +9,11 @@ public class RegistrationContract {
   public interface Presenter{
     void onRegisterClient(RegistrationData registrationData);
     void onShowPassword(CheckBox checkBox , EditText editTextPassword);
-    void onClientRegistered();
   }
 
   public interface View{
     void registerClient(RegistrationData registrationData );
     void showPassword(CheckBox checkBox , EditText editTextPassword);
-    void clientRegistered();
   }
 
 }

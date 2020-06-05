@@ -22,8 +22,4 @@ public class RegistrationViewModel implements RegistrationContract.Presenter {
     mView.showPassword(checkBox, editTextPassword);
   }
 
-  @Override
-  public void onClientRegistered() {
-    mView.clientRegistered();
-  }
 }

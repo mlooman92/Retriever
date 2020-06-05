@@ -14,11 +14,12 @@ public abstract class Item {
   @NonNull
   @ColumnInfo(name="item_identifier") private UUID itemIdentifier;
   @ColumnInfo(name="item_type_name") private String itemTypeName;
-  @ColumnInfo(name="item_update_timestamp") private ZonedDateTime itemUpdateTimestamp;
+  @ColumnInfo(name="item_update_timestamp", defaultValue="CURRENT_TIMESTAMP")
+  private ZonedDateTime itemUpdateTimestamp;
+
   @ColumnInfo(name="item_notes_text") private String itemNotesText;
 
   public UUID getItemIdentifier(){return itemIdentifier;};
-
   public void setItemIdentifier(UUID itemIdentifier){this.itemIdentifier = itemIdentifier;};
   public String getItemTypeName(){return itemTypeName;}
   public void setItemTypeName(String itemTypeName){this.itemTypeName = itemTypeName;}
