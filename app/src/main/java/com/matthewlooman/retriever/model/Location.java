@@ -42,4 +42,7 @@ public class Location extends Item {
   public void setLocationParentIdentifier(UUID locationParentIdentifier) {
     this.locationParentIdentifier = locationParentIdentifier;
   }
+
+  @Override
+  public String toString(){ return this.locationName;}
 }

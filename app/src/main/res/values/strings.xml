@@ -31,4 +31,6 @@
   <string name="labor_loaded_message">Labor Loading completed.</string>
   <string name="load_transition_message">Loading Transitions</string>
   <string name="transition_loaded_message">Transitions Loaded</string>
+  <string name="load_tag_message">Loading Tags</string>
+  <string name="tag_loaded_message">Tags Loaded</string>
 </resources>

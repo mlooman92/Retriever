@@ -24,6 +24,7 @@ import com.matthewlooman.retriever.model.ItemType;
 import com.matthewlooman.retriever.model.Labor;
 import com.matthewlooman.retriever.model.Location;
 import com.matthewlooman.retriever.model.RegistrationData;
+import com.matthewlooman.retriever.model.Tag;
 import com.matthewlooman.retriever.model.Transition;
 import com.matthewlooman.retriever.repository.Repository;
 import com.matthewlooman.retriever.rest.exception.DuplicateDeviceNameException;
@@ -56,7 +57,7 @@ public class RegistrationActivity extends AppCompatActivity implements Registrat
   @Inject SharedPreferences mEncryptedPreferences;
   @Inject Repository mRepository;
   RegistrationViewModel mRegistrationViewModel;
-  Disposable mDisposable;
+//  Disposable mDisposable;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -344,6 +345,44 @@ public class RegistrationActivity extends AppCompatActivity implements Registrat
                 progressBar.setVisibility(View.GONE);
               }
             });
+
+    Log.d(TAG, "Loading Tag");
+    mRepository.downloadTag()
+            .subscribe(new Observer<Tag>(){
+              @Override
+              public void onSubscribe(@NonNull Disposable d) {
+                textViewProgressUpdate.setText(R.string.load_tag_message);
+                textViewProgressUpdate.setVisibility(View.VISIBLE);
+                progressBar.setVisibility(View.GONE);
+              }
+
+              @Override
+              public void onNext(@NonNull Tag tag) {
+                Log.d(TAG,"Loaded Tag " + tag.toString());
+              }
+
+              @Override
+              public void onError(@NonNull Throwable e) {
+                textViewProgressUpdate.setText(R.string.load_data_error_title);
+                progressBar.setVisibility(View.GONE);
+                AlertDialog.Builder builder = new AlertDialog.Builder(RegistrationActivity.this);
+                builder.setTitle(R.string.load_data_error_title)
+                        .setMessage(e.getLocalizedMessage())
+                        .setPositiveButton(R.string.ok_button_label,(dialog , id) -> {
+                          // just close the dialog
+                        });
+                Log.d(TAG,"Error Loading Data: " + e.getLocalizedMessage());
+                e.printStackTrace();
+              }
+
+              @Override
+              public void onComplete() {
+                Log.d(TAG,"Tag load completed");
+                textViewProgressUpdate.setText(R.string.tag_loaded_message);
+                textViewProgressUpdate.setVisibility(View.VISIBLE);
+                progressBar.setVisibility(View.GONE);
+              }
+            });
   }
 
   @Override
@@ -356,7 +395,8 @@ public class RegistrationActivity extends AppCompatActivity implements Registrat
     }
   }
 
-  protected void onDestroy() {
-    this.mDisposable.dispose();
-    super.onDestroy();
-  }}
+//  protected void onDestroy() {
+//    this.mDisposable.dispose();
+//    super.onDestroy();
+//  }
+}

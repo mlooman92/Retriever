@@ -52,4 +52,7 @@ public class Labor extends Item {
   public void setParentLaborIdentifier(UUID parentLaborIdentifier) {
     this.parentLaborIdentifier = parentLaborIdentifier;
   }
+
+  @Override
+  public String toString(){return this.laborName;}
 }

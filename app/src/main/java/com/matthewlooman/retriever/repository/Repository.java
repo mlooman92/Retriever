@@ -9,15 +9,18 @@ import com.matthewlooman.retriever.model.ItemType;
 import com.matthewlooman.retriever.model.Labor;
 import com.matthewlooman.retriever.model.Location;
 import com.matthewlooman.retriever.model.RegistrationData;
+import com.matthewlooman.retriever.model.Tag;
 import com.matthewlooman.retriever.model.Transition;
 import com.matthewlooman.retriever.rest.network.ItemTypeService;
 import com.matthewlooman.retriever.rest.network.LaborService;
 import com.matthewlooman.retriever.rest.network.LocationService;
+import com.matthewlooman.retriever.rest.network.TagService;
 import com.matthewlooman.retriever.rest.network.TransitionService;
 import com.matthewlooman.retriever.rest.resource.Item;
 import com.matthewlooman.retriever.rest.resource.ItemTypeResource;
 import com.matthewlooman.retriever.rest.resource.LaborResource;
 import com.matthewlooman.retriever.rest.resource.LocationResource;
+import com.matthewlooman.retriever.rest.resource.TagResource;
 import com.matthewlooman.retriever.rest.resource.TransitionResource;
 import com.matthewlooman.retriever.room.DataTypeConverters;
 import com.matthewlooman.retriever.room.RetrieverDatabase;
@@ -173,7 +176,6 @@ public class Repository {
             .flatMap(itemList -> itemTypeService.loadItemTypes(offset.get()))
             .repeat()
             .takeUntil(item -> {
-              Log.d(TAG,"incrementing offset = " + String.valueOf(item.getOffset() + item.getCount()) );
               offset.set(item.getOffset() + item.getCount());
               return !item.hasMore();
             })
@@ -195,7 +197,6 @@ public class Repository {
             .flatMap(itemList -> locationService.loadLocations(offset.get()))
             .repeat()
             .takeUntil(item -> {
-              Log.d(TAG,"incrementing Locations offset = " + String.valueOf(item.getOffset() + item.getCount()));
               offset.set(item.getOffset() + item.getCount());
               return !item.hasMore();
             })
@@ -217,7 +218,6 @@ public class Repository {
             .flatMap(itemList -> laborService.loadLabors(offset.get()))
             .repeat()
             .takeUntil(item -> {
-              Log.d(TAG,"incrementing Labors offset = " + String.valueOf(item.getOffset() + item.getCount()));
               offset.set(item.getOffset() + item.getCount());
               return !item.hasMore();
             })
@@ -251,7 +251,43 @@ public class Repository {
 
   }
 
-  private Transition transitionResourceToDatabase(TransitionResource transitionResource) {
+  public Observable<Tag> downloadTag(){
+    Retrofit retrofit = getRetrofit(getOkHttpClient());
+    TagService tagService = retrofit.create(TagService.class);
+    AtomicInteger offset = new AtomicInteger();
+    offset.set(0);
+
+    Observable<Tag> output = Observable.just(0)
+            .subscribeOn(Schedulers.io())
+            .flatMap(itemList -> tagService.loadTags(offset.get()))
+            .repeat()
+            .takeUntil(item -> {
+              offset.set(item.getOffset() + item.getCount());
+              return !item.hasMore();
+            })
+            .flatMap(item -> Observable.fromIterable(item.getItems()))
+            .map(this::tagResourceToDatabase)
+            .observeOn(AndroidSchedulers.mainThread());
+
+    return output;
+
+  }
+
+  @NotNull
+  public Tag tagResourceToDatabase(@NotNull TagResource tagResource){
+    Tag tag = new Tag();
+    tag.setItemIdentifier(DataTypeConverters.fromStringToUUID(tagResource.getItemIdentifier()));
+    tag.setItemTypeName(tagResource.getItemTypeName());
+    tag.setItemUpdateTimestamp(ZonedDateTime.parse(tagResource.getItemUpdateTimestamp()
+            ,DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSVV")));
+    tag.setItemNotesText(tagResource.getItemNotesText());
+    tag.setCategoryName(tagResource.getCategoryName());
+    tag.setCategoryDefinitionText(tagResource.getCategoryDefinitionText());
+    return tag;
+  }
+
+  @NotNull
+  public Transition transitionResourceToDatabase(@NotNull TransitionResource transitionResource) {
     Log.d(TAG,"Loading Transition = '" + transitionResource.toString() + "'");
     Transition transition = new Transition();
     transition.setItemIdentifier(DataTypeConverters.fromStringToUUID(transitionResource.getItemIdentifier()));
@@ -273,7 +309,7 @@ public class Repository {
   }
 
   @NotNull
-  private Labor laborResourceToDatabase(@NotNull LaborResource laborResource) {
+  public Labor laborResourceToDatabase(@NotNull LaborResource laborResource) {
     Log.d(TAG,"Loading labor = '" + laborResource.getLaborName() + "'" );
     Labor labor = new Labor();
     labor.setItemIdentifier(DataTypeConverters.fromStringToUUID(laborResource.getItemIdentifier()));
@@ -291,7 +327,7 @@ public class Repository {
   }
 
   @NotNull
-  private Location locationResourceToDatabase(@NotNull LocationResource locationResource) {
+  public Location locationResourceToDatabase(@NotNull LocationResource locationResource) {
     Log.d(TAG,"Loading location = '" + locationResource.getLocationName() + "'");
     Location location = new Location();
     location.setItemIdentifier(DataTypeConverters.fromStringToUUID(locationResource.getItemIdentifier()));
@@ -307,7 +343,7 @@ public class Repository {
   }
 
   @NotNull
-  private ItemType itemTypeResourceToDatabase(@NotNull ItemTypeResource itemTypeResource) {
+  public ItemType itemTypeResourceToDatabase(@NotNull ItemTypeResource itemTypeResource) {
     ItemType itemType = new ItemType();
     itemType.setItemTypeName(itemTypeResource.getItemTypeName());
     itemType.setItemTypeAbbreviationCode(itemTypeResource.getItemTypeAbbreviationCode());
