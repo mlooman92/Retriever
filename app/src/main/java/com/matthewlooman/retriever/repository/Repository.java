@@ -5,22 +5,24 @@ import android.util.Log;
 
 import androidx.room.Room;
 
+import com.matthewlooman.retriever.model.Category;
 import com.matthewlooman.retriever.model.ItemType;
 import com.matthewlooman.retriever.model.Labor;
 import com.matthewlooman.retriever.model.Location;
+import com.matthewlooman.retriever.model.Priority;
 import com.matthewlooman.retriever.model.RegistrationData;
 import com.matthewlooman.retriever.model.Tag;
 import com.matthewlooman.retriever.model.Transition;
 import com.matthewlooman.retriever.rest.network.ItemTypeService;
 import com.matthewlooman.retriever.rest.network.LaborService;
 import com.matthewlooman.retriever.rest.network.LocationService;
-import com.matthewlooman.retriever.rest.network.TagService;
+import com.matthewlooman.retriever.rest.network.CategoryService;
 import com.matthewlooman.retriever.rest.network.TransitionService;
 import com.matthewlooman.retriever.rest.resource.Item;
 import com.matthewlooman.retriever.rest.resource.ItemTypeResource;
 import com.matthewlooman.retriever.rest.resource.LaborResource;
 import com.matthewlooman.retriever.rest.resource.LocationResource;
-import com.matthewlooman.retriever.rest.resource.TagResource;
+import com.matthewlooman.retriever.rest.resource.CategoryResource;
 import com.matthewlooman.retriever.rest.resource.TransitionResource;
 import com.matthewlooman.retriever.room.DataTypeConverters;
 import com.matthewlooman.retriever.room.RetrieverDatabase;
@@ -28,7 +30,6 @@ import com.matthewlooman.retriever.room.RetrieverDatabase;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -37,6 +38,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import hu.akarnokd.rxjava3.retrofit.RxJava3CallAdapterFactory;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import okhttp3.Credentials;
@@ -144,17 +146,29 @@ public class Repository {
     mRetrieverDatabase.itemTypeDao().save(itemType);
   }
 
+  public List<Labor> getLabors(){return mRetrieverDatabase.laborDao().getLabors();}
+  public Labor getLabor(String laborName){return mRetrieverDatabase.laborDao().getLabor(laborName);}
+  public Labor getLabor(UUID itemIdentifier){return mRetrieverDatabase.laborDao().getLabor(itemIdentifier);}
+  public void deleteLabor(Labor labor){mRetrieverDatabase.laborDao().delete(labor);}
+  public void insertLabor(Labor labor){mRetrieverDatabase.laborDao().save(labor);}
+
   public List<Location> getLocations(){return mRetrieverDatabase.locationDao().getLocations();}
   public Location getLocation(String locationName){return mRetrieverDatabase.locationDao().getLocation(locationName);}
   public Location getLocation(UUID itemIdentifier){return mRetrieverDatabase.locationDao().getLocation(itemIdentifier);}
   public void deleteLocation(Location location){mRetrieverDatabase.locationDao().delete(location);}
   public void insertLocation(Location location){mRetrieverDatabase.locationDao().save(location);}
 
-  public List<Labor> getLabors(){return mRetrieverDatabase.laborDao().getLabors();}
-  public Labor getLabor(String laborName){return mRetrieverDatabase.laborDao().getLabor(laborName);}
-  public Labor getLabor(UUID itemIdentifier){return mRetrieverDatabase.laborDao().getLabor(itemIdentifier);}
-  public void deleteLabor(Labor labor){mRetrieverDatabase.laborDao().delete(labor);}
-  public void insertLabor(Labor labor){mRetrieverDatabase.laborDao().save(labor);}
+  public List<Priority> getPriorities(){return mRetrieverDatabase.priorityDao().getPriorities();}
+  public Priority getPriority(String priorityName){return mRetrieverDatabase.priorityDao().getPriority(priorityName);}
+  public Priority getPriority(UUID itemIdentifier){return mRetrieverDatabase.priorityDao().getPriority(itemIdentifier);}
+  public void deletePriority(Priority priority){mRetrieverDatabase.priorityDao().delete(priority);}
+  public void insertPriority(Priority priority){mRetrieverDatabase.priorityDao().save(priority);}
+  
+  public List<Tag> getTags(){return mRetrieverDatabase.tagDao().getTags();}
+  public Tag getTag(String tagName){return mRetrieverDatabase.tagDao().getTag(tagName);}
+  public Tag getTag(UUID itemIdentifier){return mRetrieverDatabase.tagDao().getTag(itemIdentifier);}
+  public void deleteTag(Tag tag){mRetrieverDatabase.tagDao().delete(tag);}
+  public void insertTag(Tag tag){mRetrieverDatabase.tagDao().save(tag);}
 
   public List<Transition> getTransitions(){return mRetrieverDatabase.transitionDao().getTransitions();}
   public Transition getTransition(UUID itemIdentifier){ return mRetrieverDatabase.transitionDao().getTransition(itemIdentifier);}
@@ -251,22 +265,46 @@ public class Repository {
 
   }
 
-  public Observable<Tag> downloadTag(){
+  public Observable<Category> downloadTag(){
     Retrofit retrofit = getRetrofit(getOkHttpClient());
-    TagService tagService = retrofit.create(TagService.class);
+    CategoryService categoryService = retrofit.create(CategoryService.class);
     AtomicInteger offset = new AtomicInteger();
     offset.set(0);
 
-    Observable<Tag> output = Observable.just(0)
+    @NonNull 
+    Observable<Category> output = Observable.just(0)
             .subscribeOn(Schedulers.io())
-            .flatMap(itemList -> tagService.loadTags(offset.get()))
+            .flatMap(itemList -> categoryService.loadCategories("tag",offset.get()))
             .repeat()
             .takeUntil(item -> {
               offset.set(item.getOffset() + item.getCount());
               return !item.hasMore();
             })
             .flatMap(item -> Observable.fromIterable(item.getItems()))
-            .map(this::tagResourceToDatabase)
+            .map(this::categoryResourceToDatabase)
+            .observeOn(AndroidSchedulers.mainThread());
+
+    return output;
+
+  }
+
+  public Observable<Category> downloadPriority(){
+    Retrofit retrofit = getRetrofit(getOkHttpClient());
+    CategoryService categoryService = retrofit.create(CategoryService.class);
+    AtomicInteger offset = new AtomicInteger();
+    offset.set(0);
+
+    @NonNull
+    Observable<Category> output = Observable.just(0)
+            .subscribeOn(Schedulers.io())
+            .flatMap(itemList -> categoryService.loadCategories("priority",offset.get()))
+            .repeat()
+            .takeUntil(item -> {
+              offset.set(item.getOffset() + item.getCount());
+              return !item.hasMore();
+            })
+            .flatMap(item -> Observable.fromIterable(item.getItems()))
+            .map(this::categoryResourceToDatabase)
             .observeOn(AndroidSchedulers.mainThread());
 
     return output;
@@ -274,16 +312,37 @@ public class Repository {
   }
 
   @NotNull
-  public Tag tagResourceToDatabase(@NotNull TagResource tagResource){
-    Tag tag = new Tag();
-    tag.setItemIdentifier(DataTypeConverters.fromStringToUUID(tagResource.getItemIdentifier()));
-    tag.setItemTypeName(tagResource.getItemTypeName());
-    tag.setItemUpdateTimestamp(ZonedDateTime.parse(tagResource.getItemUpdateTimestamp()
+  public Category categoryResourceToDatabase(@NotNull CategoryResource categoryResource){
+    Category category;
+    switch (categoryResource.getItemTypeName()) {
+      case "Tag":  //TODO Consider how best to implement this, for consistency and refactoring
+        category = new Tag();
+        break;
+      case "Priority":
+        category = new Priority();
+        break;
+      default:
+        throw new IllegalStateException("Unexpected value: " + categoryResource.getItemTypeName());
+    }
+    category.setItemIdentifier(DataTypeConverters.fromStringToUUID(categoryResource.getItemIdentifier()));
+    category.setItemTypeName(categoryResource.getItemTypeName());
+    category.setItemUpdateTimestamp(ZonedDateTime.parse(categoryResource.getItemUpdateTimestamp()
             ,DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSVV")));
-    tag.setItemNotesText(tagResource.getItemNotesText());
-    tag.setCategoryName(tagResource.getCategoryName());
-    tag.setCategoryDefinitionText(tagResource.getCategoryDefinitionText());
-    return tag;
+    category.setItemNotesText(categoryResource.getItemNotesText());
+    category.setCategoryName(categoryResource.getCategoryName());
+    category.setCategoryDefinitionText(categoryResource.getCategoryDefinitionText());
+    switch(category.getClass().getSimpleName()){
+      case Priority.CLASS_SIMPLE_NAME:  // TODO Consider if this implementation is a best practice
+                                        // Possibliy overload the insertmethod?
+        insertPriority((Priority)category);
+        break;
+      case Tag.CLASS_SIMPLE_NAME:
+        insertTag((Tag)category);
+        break;
+      default:
+        throw new IllegalStateException("Unexpected class: " + category.getClass().getSimpleName());
+    }
+    return category;
   }
 
   @NotNull

@@ -3,6 +3,7 @@ package com.matthewlooman.retriever.room;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
+import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
 import com.matthewlooman.retriever.model.Tag;
@@ -21,7 +22,7 @@ public interface TagDao {
   @Query("SELECT * FROM Tag WHERE item_identifier = :itemIdentifier")
   Tag getTag(UUID itemIdentifier);
 
-  @Insert
+  @Insert(onConflict= OnConflictStrategy.REPLACE)
   void save(Tag tag);
 
   @Delete

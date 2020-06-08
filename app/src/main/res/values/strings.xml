@@ -33,4 +33,7 @@
   <string name="transition_loaded_message">Transitions Loaded</string>
   <string name="load_tag_message">Loading Tags</string>
   <string name="tag_loaded_message">Tags Loaded</string>
+  <string name="load_item_message_complete">Items Loaded Successfully</string>
+  <string name="loading_items">Loading Items</string>
+  <string name="load_item_type_error">Error Loading Item Types</string>
 </resources>

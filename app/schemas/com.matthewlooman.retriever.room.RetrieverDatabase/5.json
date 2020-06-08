@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 5,
-    "identityHash": "09e8d8bae4261e0a134c9a912e05fc3c",
+    "identityHash": "19a40ef4cb39521e2a8767f542412917",
     "entities": [
       {
         "tableName": "Item_Type",
@@ -130,6 +130,57 @@
           {
             "fieldPath": "parentLaborIdentifier",
             "columnName": "parent_labor_identifier",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "itemIdentifier",
+            "columnName": "item_identifier",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "itemTypeName",
+            "columnName": "item_type_name",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "itemUpdateTimestamp",
+            "columnName": "item_update_timestamp",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "CURRENT_TIMESTAMP"
+          },
+          {
+            "fieldPath": "itemNotesText",
+            "columnName": "item_notes_text",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "item_identifier"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "Priority",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`category_name` TEXT, `category_definition_text` TEXT, `item_identifier` TEXT NOT NULL, `item_type_name` TEXT, `item_update_timestamp` TEXT DEFAULT CURRENT_TIMESTAMP, `item_notes_text` TEXT, PRIMARY KEY(`item_identifier`))",
+        "fields": [
+          {
+            "fieldPath": "categoryName",
+            "columnName": "category_name",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "categoryDefinitionText",
+            "columnName": "category_definition_text",
             "affinity": "TEXT",
             "notNull": false
           },
@@ -310,7 +361,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '09e8d8bae4261e0a134c9a912e05fc3c')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '19a40ef4cb39521e2a8767f542412917')"
     ]
   }
 }

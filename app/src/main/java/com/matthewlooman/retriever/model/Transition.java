@@ -82,6 +82,6 @@ public class Transition extends Item {
 
   @Override
   public String toString(){
-    return "(" + transitionItemTypeName + ") " + transitionFromStateName + "-->" + transitionToStateName + " for " + transitionReasonName;
+    return "(" + transitionItemTypeName + ") " + transitionFromStateName + "-->" + transitionToStateName + " because " + transitionReasonName;
   }
 }

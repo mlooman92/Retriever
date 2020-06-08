@@ -15,17 +15,13 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 
-import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 import com.matthewlooman.retriever.R;
 import com.matthewlooman.retriever.RetrieverApp;
 import com.matthewlooman.retriever.databinding.ActivityRegistrationBinding;
+import com.matthewlooman.retriever.model.Item;
 import com.matthewlooman.retriever.model.ItemType;
-import com.matthewlooman.retriever.model.Labor;
-import com.matthewlooman.retriever.model.Location;
 import com.matthewlooman.retriever.model.RegistrationData;
-import com.matthewlooman.retriever.model.Tag;
-import com.matthewlooman.retriever.model.Transition;
 import com.matthewlooman.retriever.repository.Repository;
 import com.matthewlooman.retriever.rest.exception.DuplicateDeviceNameException;
 import com.matthewlooman.retriever.rest.exception.ResponseException;
@@ -37,15 +33,13 @@ import com.matthewlooman.retriever.ui.view.RegistrationViewModel;
 
 import javax.inject.Inject;
 
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.annotations.NonNull;
+import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Observer;
 import io.reactivex.rxjava3.disposables.Disposable;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-
-import static com.matthewlooman.retriever.repository.Repository.*;
 
 public class RegistrationActivity extends AppCompatActivity implements RegistrationContract.View {
 
@@ -57,7 +51,6 @@ public class RegistrationActivity extends AppCompatActivity implements Registrat
   @Inject SharedPreferences mEncryptedPreferences;
   @Inject Repository mRepository;
   RegistrationViewModel mRegistrationViewModel;
-//  Disposable mDisposable;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +64,7 @@ public class RegistrationActivity extends AppCompatActivity implements Registrat
     textViewProgressUpdate = findViewById(R.id.textViewProgressUpdate);
     progressBar = findViewById(R.id.progressBar);
     checkBoxDuplicateRegistration = findViewById(R.id.checkBoxDuplicateRegistration);
+
   }
 
   @Override
@@ -191,7 +185,7 @@ public class RegistrationActivity extends AppCompatActivity implements Registrat
   }
 
   private void loadServerData() {
-    Log.d(TAG,"Loading ItemTypes");
+    Log.d(TAG,"Loading ItemType Definitions");
     mRepository.downloadItemTypes()
             .subscribe(new Observer<ItemType>() {
       @Override
@@ -211,6 +205,9 @@ public class RegistrationActivity extends AppCompatActivity implements Registrat
 
       @Override
       public void onError(@NonNull Throwable e) {
+        textViewProgressUpdate.setText(R.string.load_item_type_error);
+        textViewProgressUpdate.setVisibility(View.VISIBLE);
+        progressBar.setVisibility(View.GONE);
         Log.d(TAG,"Error Loading Data: " + e.getLocalizedMessage());
         e.printStackTrace();
         AlertDialog.Builder builder = new AlertDialog.Builder(RegistrationActivity.this);
@@ -227,162 +224,55 @@ public class RegistrationActivity extends AppCompatActivity implements Registrat
         textViewProgressUpdate.setText(R.string.load_item_type_message_complete);
         textViewProgressUpdate.setVisibility(View.VISIBLE);
         progressBar.setVisibility(View.GONE);
+
+        Log.d(TAG,"Loading Lookup Tables");
+        Observable.concat(mRepository.downloadLocations(),mRepository.downloadLabors())
+                .concatWith(mRepository.downloadTransition())
+                .concatWith(mRepository.downloadTag())
+                .concatWith(mRepository.downloadPriority())
+                .subscribe(new Observer<Item>(){
+
+                  @Override
+                  public void onSubscribe(@NonNull Disposable d) {
+                    textViewProgressUpdate.setText(R.string.loading_items);
+                    textViewProgressUpdate.setVisibility(View.VISIBLE);
+                    progressBar.setVisibility(View.VISIBLE);
+                  }
+
+                  @Override
+                  public void onNext(@NonNull Item item) {
+                    Log.d(TAG,"Loading " + item.getItemTypeName() + " -- " + item.toString());
+                  }
+
+
+                  @Override
+                  public void onError(@NonNull Throwable e) {
+                    textViewProgressUpdate.setText(R.string.load_data_error_title);
+                    progressBar.setVisibility(View.GONE);
+                    AlertDialog.Builder builder = new AlertDialog.Builder(RegistrationActivity.this);
+                    builder.setTitle(R.string.load_data_error_title)
+                            .setMessage(e.getLocalizedMessage())
+                            .setPositiveButton(R.string.ok_button_label,(dialog , id) -> {
+                              // just close the dialog
+                            });
+                    Log.d(TAG,"Error Loading Data: " + e.getLocalizedMessage());
+                    e.printStackTrace();
+                  }
+
+                  @Override
+                  public void onComplete() {
+                    textViewProgressUpdate.setText(R.string.load_item_message_complete);
+                    textViewProgressUpdate.setVisibility(View.VISIBLE);
+                    progressBar.setVisibility(View.GONE);
+                  }
+                });
+
+
       }
     });
 
-    Log.d(TAG,"Loading Locations");
-    mRepository.downloadLocations()
-            .subscribe(new Observer<Location>(){
 
-              @Override
-              public void onSubscribe(@NonNull Disposable d) {
-                textViewProgressUpdate.setText(R.string.loading_locations);
-                textViewProgressUpdate.setVisibility(View.VISIBLE);
-                progressBar.setVisibility(View.VISIBLE);
-              }
 
-              @Override
-              public void onNext(@NonNull Location location) {
-                Log.d(TAG,"Location: " + location.getLocationName());
-                Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content)
-                ,location.getLocationName()
-                ,Snackbar.LENGTH_SHORT);
-              }
-
-              @Override
-              public void onError(@NonNull Throwable e) {
-                textViewProgressUpdate.setText(R.string.load_data_error_title);
-                progressBar.setVisibility(View.GONE);
-                AlertDialog.Builder builder = new AlertDialog.Builder(RegistrationActivity.this);
-                builder.setTitle(R.string.load_data_error_title)
-                        .setMessage(e.getLocalizedMessage())
-                        .setPositiveButton(R.string.ok_button_label,(dialog , id) -> {
-                          // just close the dialog
-                        });
-                Log.d(TAG,"Error Loading Data: " + e.getLocalizedMessage());
-                e.printStackTrace();
-              }
-
-              @Override
-              public void onComplete() {
-                textViewProgressUpdate.setText(R.string.load_location_message_complete);
-                textViewProgressUpdate.setVisibility(View.VISIBLE);
-                progressBar.setVisibility(View.GONE);
-              }
-            });
-
-    Log.d(TAG,"Loading Labor");
-    mRepository.downloadLabors()
-            .subscribe(new Observer<Labor>() {
-              @Override
-              public void onSubscribe(@NonNull Disposable d) {
-                textViewProgressUpdate.setText(R.string.labor_loading_title);
-              }
-
-              @Override
-              public void onNext(@NonNull Labor labor) {
-                Log.d(TAG,"Loaded: " + labor.getLaborName());
-              }
-
-              @Override
-              public void onError(@NonNull Throwable e) {
-                textViewProgressUpdate.setText(R.string.load_data_error_title);
-                progressBar.setVisibility(View.GONE);
-                AlertDialog.Builder builder = new AlertDialog.Builder(RegistrationActivity.this);
-                builder.setTitle(R.string.load_data_error_title)
-                        .setMessage(e.getLocalizedMessage())
-                        .setPositiveButton(R.string.ok_button_label,(dialog , id) -> {
-                          // just close the dialog
-                        });
-                Log.d(TAG,"Error Loading Data: " + e.getLocalizedMessage());
-                e.printStackTrace();
-              }
-
-              @Override
-              public void onComplete() {
-                Log.d(TAG,"Labor load completed");
-                textViewProgressUpdate.setText(R.string.labor_loaded_message);
-                textViewProgressUpdate.setVisibility(View.VISIBLE);
-                progressBar.setVisibility(View.GONE);
-
-              }
-            });
-
-    Log.d(TAG, "Loading Transition");
-    mRepository.downloadTransition()
-            .subscribe(new Observer<Transition>(){
-              @Override
-              public void onSubscribe(@NonNull Disposable d) {
-                textViewProgressUpdate.setText(R.string.load_transition_message);
-                textViewProgressUpdate.setVisibility(View.VISIBLE);
-                progressBar.setVisibility(View.GONE);
-              }
-
-              @Override
-              public void onNext(@NonNull Transition transition) {
-                Log.d(TAG,"Loaded Transition " + transition.toString());
-              }
-
-              @Override
-              public void onError(@NonNull Throwable e) {
-                textViewProgressUpdate.setText(R.string.load_data_error_title);
-                progressBar.setVisibility(View.GONE);
-                AlertDialog.Builder builder = new AlertDialog.Builder(RegistrationActivity.this);
-                builder.setTitle(R.string.load_data_error_title)
-                        .setMessage(e.getLocalizedMessage())
-                        .setPositiveButton(R.string.ok_button_label,(dialog , id) -> {
-                          // just close the dialog
-                        });
-                Log.d(TAG,"Error Loading Data: " + e.getLocalizedMessage());
-                e.printStackTrace();
-              }
-
-              @Override
-              public void onComplete() {
-                Log.d(TAG,"Transition load completed");
-                textViewProgressUpdate.setText(R.string.transition_loaded_message);
-                textViewProgressUpdate.setVisibility(View.VISIBLE);
-                progressBar.setVisibility(View.GONE);
-              }
-            });
-
-    Log.d(TAG, "Loading Tag");
-    mRepository.downloadTag()
-            .subscribe(new Observer<Tag>(){
-              @Override
-              public void onSubscribe(@NonNull Disposable d) {
-                textViewProgressUpdate.setText(R.string.load_tag_message);
-                textViewProgressUpdate.setVisibility(View.VISIBLE);
-                progressBar.setVisibility(View.GONE);
-              }
-
-              @Override
-              public void onNext(@NonNull Tag tag) {
-                Log.d(TAG,"Loaded Tag " + tag.toString());
-              }
-
-              @Override
-              public void onError(@NonNull Throwable e) {
-                textViewProgressUpdate.setText(R.string.load_data_error_title);
-                progressBar.setVisibility(View.GONE);
-                AlertDialog.Builder builder = new AlertDialog.Builder(RegistrationActivity.this);
-                builder.setTitle(R.string.load_data_error_title)
-                        .setMessage(e.getLocalizedMessage())
-                        .setPositiveButton(R.string.ok_button_label,(dialog , id) -> {
-                          // just close the dialog
-                        });
-                Log.d(TAG,"Error Loading Data: " + e.getLocalizedMessage());
-                e.printStackTrace();
-              }
-
-              @Override
-              public void onComplete() {
-                Log.d(TAG,"Tag load completed");
-                textViewProgressUpdate.setText(R.string.tag_loaded_message);
-                textViewProgressUpdate.setVisibility(View.VISIBLE);
-                progressBar.setVisibility(View.GONE);
-              }
-            });
   }
 
   @Override
@@ -395,8 +285,4 @@ public class RegistrationActivity extends AppCompatActivity implements Registrat
     }
   }
 
-//  protected void onDestroy() {
-//    this.mDisposable.dispose();
-//    super.onDestroy();
-//  }
 }

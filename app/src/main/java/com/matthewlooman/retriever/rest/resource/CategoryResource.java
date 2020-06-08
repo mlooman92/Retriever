@@ -2,7 +2,7 @@ package com.matthewlooman.retriever.rest.resource;
 
 import com.google.gson.annotations.SerializedName;
 
-public class TagResource {
+public class CategoryResource {
   @SerializedName("item_identifier") private String itemIdentifier;
   @SerializedName("item_type_name") private String itemTypeName;
   @SerializedName("item_notes_text") private String itemNotesText;
