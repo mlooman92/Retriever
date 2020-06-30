@@ -9,6 +9,9 @@ import com.matthewlooman.retriever.model.Category;
 import com.matthewlooman.retriever.model.ItemType;
 import com.matthewlooman.retriever.model.Labor;
 import com.matthewlooman.retriever.model.Location;
+import com.matthewlooman.retriever.model.Organization;
+import com.matthewlooman.retriever.model.Party;
+import com.matthewlooman.retriever.model.Person;
 import com.matthewlooman.retriever.model.Priority;
 import com.matthewlooman.retriever.model.RegistrationData;
 import com.matthewlooman.retriever.model.Tag;
@@ -17,12 +20,15 @@ import com.matthewlooman.retriever.rest.network.ItemTypeService;
 import com.matthewlooman.retriever.rest.network.LaborService;
 import com.matthewlooman.retriever.rest.network.LocationService;
 import com.matthewlooman.retriever.rest.network.CategoryService;
+import com.matthewlooman.retriever.rest.network.PartyService;
 import com.matthewlooman.retriever.rest.network.TransitionService;
 import com.matthewlooman.retriever.rest.resource.Item;
 import com.matthewlooman.retriever.rest.resource.ItemTypeResource;
 import com.matthewlooman.retriever.rest.resource.LaborResource;
 import com.matthewlooman.retriever.rest.resource.LocationResource;
 import com.matthewlooman.retriever.rest.resource.CategoryResource;
+import com.matthewlooman.retriever.rest.resource.OrganizationResource;
+import com.matthewlooman.retriever.rest.resource.PersonResource;
 import com.matthewlooman.retriever.rest.resource.TransitionResource;
 import com.matthewlooman.retriever.room.DataTypeConverters;
 import com.matthewlooman.retriever.room.RetrieverDatabase;
@@ -174,6 +180,16 @@ public class Repository {
   public Transition getTransition(UUID itemIdentifier){ return mRetrieverDatabase.transitionDao().getTransition(itemIdentifier);}
   public void deleteTransition(Transition transition){ mRetrieverDatabase.transitionDao().delete(transition);}
   public void insertTransition(Transition transition){ mRetrieverDatabase.transitionDao().save(transition);}
+
+  public List<Party> getParties(){ return mRetrieverDatabase.partyDao().getParties();}
+  public List<Person> getPersons(){return mRetrieverDatabase.personDao().getPersons();}
+  public List<Organization> getOrganizations(){return mRetrieverDatabase.organizationDao().getOrganizations();}
+  public Party getParty(UUID itemIdentifier){ return mRetrieverDatabase.partyDao().getParty(itemIdentifier);}
+  public Party getParty(String partyName){return mRetrieverDatabase.partyDao().getParty(partyName);}
+  public void deleteParty(Party party){mRetrieverDatabase.partyDao().delete(party);}
+  public void insertParty(Party party){mRetrieverDatabase.partyDao().save(party);}
+
+
   // endregion
 
   // region Data Load Routines
@@ -308,7 +324,82 @@ public class Repository {
             .observeOn(AndroidSchedulers.mainThread());
 
     return output;
+  }
 
+  public Observable<Person> downloadPerson(){
+    Retrofit retrofit = getRetrofit(getOkHttpClient());
+    PartyService partyService = retrofit.create(PartyService.class);
+    AtomicInteger offset = new AtomicInteger();
+    offset.set(0);
+
+    @NonNull
+    Observable<Person> output = Observable.just(0)
+            .subscribeOn(Schedulers.io())
+            .flatMap(itemList -> partyService.loadPersons(offset.get()))
+            .repeat()
+            .takeUntil(item-> {
+              offset.set(item.getOffset() + item.getCount());
+              return !item.hasMore();
+            })
+            .flatMap(item -> Observable.fromIterable(item.getItems()))
+            .map(this::personResourceToDatabase)
+            .observeOn(AndroidSchedulers.mainThread());
+    return output;
+  }
+
+  public Observable<Organization> downloadOrganization(){
+    Retrofit retrofit = getRetrofit(getOkHttpClient());
+    PartyService partyService = retrofit.create(PartyService.class);
+    AtomicInteger offset = new AtomicInteger();
+    offset.set(0);
+
+    @NonNull
+    Observable<Organization> output = Observable.just(0)
+            .subscribeOn(Schedulers.io())
+            .flatMap(itemList -> partyService.loadOrganizations(offset.get()))
+            .repeat()
+            .takeUntil(item -> {
+              offset.set(item.getOffset() + item.getCount());
+              return !item.hasMore();
+            })
+            .flatMap(item -> Observable.fromIterable(item.getItems()))
+            .map(this::organizationResourceToDatabase)
+            .observeOn(AndroidSchedulers.mainThread());
+    return output;
+  }
+
+  @NotNull
+  public Organization organizationResourceToDatabase(@NotNull OrganizationResource organizationResource){
+    Organization organization = new Organization();
+    organization.setItemIdentifier(DataTypeConverters.fromStringToUUID(organizationResource.getItemIdentifier()));
+    organization.setItemTypeName(organizationResource.getItemTypeName());
+    organization.setItemUpdateTimestamp(ZonedDateTime.parse(organizationResource.getItemUpdateTimestamp()
+            ,DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSVV")));
+    organization.setItemNotesText(organizationResource.getItemNotesText());
+    organization.setPartyName(organizationResource.getPartyName());
+    organization.setPartyAlternativeName(organizationResource.getPartyAlternativeName());
+    organization.setOrganizationWebDomain(organizationResource.getOrganizationWebDomain());
+
+    insertParty(organization);
+
+    return organization;
+
+  }
+  @NotNull
+  public Person personResourceToDatabase(@NotNull PersonResource personResource){
+    Person person = new Person();
+    person.setItemIdentifier(DataTypeConverters.fromStringToUUID(personResource.getItemIdentifier()));
+    person.setItemTypeName(personResource.getItemTypeName());
+    person.setItemUpdateTimestamp(ZonedDateTime.parse(personResource.getItemUpdateTimestamp()
+            ,DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSVV")));
+    person.setItemNotesText(personResource.getItemNotesText());
+    person.setPersonFamilyName(personResource.getPersonFamilyName());
+    person.setPersonGivenName(personResource.getPersonGivenName());
+    person.setPersonEmailAddress(personResource.getPersonEmailAddress());
+
+    insertParty(person);
+
+    return person;
   }
 
   @NotNull
@@ -322,7 +413,7 @@ public class Repository {
         category = new Priority();
         break;
       default:
-        throw new IllegalStateException("Unexpected value: " + categoryResource.getItemTypeName());
+        throw new IllegalStateException("Unexpected itemType value: " + categoryResource.getItemTypeName());
     }
     category.setItemIdentifier(DataTypeConverters.fromStringToUUID(categoryResource.getItemIdentifier()));
     category.setItemTypeName(categoryResource.getItemTypeName());
@@ -331,13 +422,12 @@ public class Repository {
     category.setItemNotesText(categoryResource.getItemNotesText());
     category.setCategoryName(categoryResource.getCategoryName());
     category.setCategoryDefinitionText(categoryResource.getCategoryDefinitionText());
-    switch(category.getClass().getSimpleName()){
-      case Priority.CLASS_SIMPLE_NAME:  // TODO Consider if this implementation is a best practice
-                                        // Possibliy overload the insertmethod?
-        insertPriority((Priority)category);
+    switch(category.getClass().getSimpleName()) {
+      case Priority.CLASS_SIMPLE_NAME:
+        insertPriority((Priority) category);
         break;
       case Tag.CLASS_SIMPLE_NAME:
-        insertTag((Tag)category);
+        insertTag((Tag) category);
         break;
       default:
         throw new IllegalStateException("Unexpected class: " + category.getClass().getSimpleName());

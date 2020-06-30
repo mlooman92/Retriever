@@ -3,6 +3,7 @@ package com.matthewlooman.retriever.model;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 
+@Entity
 public abstract class Category extends Item {
   @ColumnInfo(name="category_name") private String categoryName;
   @ColumnInfo(name="category_definition_text") private String categoryDefinitionText;

@@ -3,12 +3,17 @@ package com.matthewlooman.retriever.model;
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Entity(tableName="Location")
+@Entity(tableName="Location"
+        ,indices={@Index(value="location_name",unique=true)
+                 ,@Index(value="location_abbreviation_code",unique=true)
+                 }
+       )
 public class Location extends Item {
   @ColumnInfo(name="location_name")
   String locationName;

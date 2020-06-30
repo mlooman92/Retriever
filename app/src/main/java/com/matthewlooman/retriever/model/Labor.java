@@ -2,10 +2,13 @@ package com.matthewlooman.retriever.model;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Index;
 
 import java.util.UUID;
 
-@Entity(tableName="Labor")
+@Entity(tableName="Labor"
+        , indices = {@Index(value="labor_name",unique=true)}
+       )
 public class Labor extends Item {
   @ColumnInfo(name="labor_name")  private String laborName;
   @ColumnInfo(name="labor_is_chargeable_flag") private boolean laborIsChargeableFlag;

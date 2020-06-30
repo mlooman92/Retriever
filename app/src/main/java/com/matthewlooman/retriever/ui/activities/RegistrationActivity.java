@@ -225,47 +225,49 @@ public class RegistrationActivity extends AppCompatActivity implements Registrat
         textViewProgressUpdate.setVisibility(View.VISIBLE);
         progressBar.setVisibility(View.GONE);
 
-        Log.d(TAG,"Loading Lookup Tables");
-        Observable.concat(mRepository.downloadLocations(),mRepository.downloadLabors())
-                .concatWith(mRepository.downloadTransition())
-                .concatWith(mRepository.downloadTag())
-                .concatWith(mRepository.downloadPriority())
-                .subscribe(new Observer<Item>(){
-
-                  @Override
-                  public void onSubscribe(@NonNull Disposable d) {
-                    textViewProgressUpdate.setText(R.string.loading_items);
-                    textViewProgressUpdate.setVisibility(View.VISIBLE);
-                    progressBar.setVisibility(View.VISIBLE);
-                  }
-
-                  @Override
-                  public void onNext(@NonNull Item item) {
-                    Log.d(TAG,"Loading " + item.getItemTypeName() + " -- " + item.toString());
-                  }
-
-
-                  @Override
-                  public void onError(@NonNull Throwable e) {
-                    textViewProgressUpdate.setText(R.string.load_data_error_title);
-                    progressBar.setVisibility(View.GONE);
-                    AlertDialog.Builder builder = new AlertDialog.Builder(RegistrationActivity.this);
-                    builder.setTitle(R.string.load_data_error_title)
-                            .setMessage(e.getLocalizedMessage())
-                            .setPositiveButton(R.string.ok_button_label,(dialog , id) -> {
-                              // just close the dialog
-                            });
-                    Log.d(TAG,"Error Loading Data: " + e.getLocalizedMessage());
-                    e.printStackTrace();
-                  }
-
-                  @Override
-                  public void onComplete() {
-                    textViewProgressUpdate.setText(R.string.load_item_message_complete);
-                    textViewProgressUpdate.setVisibility(View.VISIBLE);
-                    progressBar.setVisibility(View.GONE);
-                  }
-                });
+//        Log.d(TAG,"Loading Lookup Tables");
+//        Observable.concat(mRepository.downloadLocations(),mRepository.downloadLabors())
+//                .concatWith(mRepository.downloadTransition())
+//                .concatWith(mRepository.downloadTag())
+//                .concatWith(mRepository.downloadPriority())
+//                .concatWith(mRepository.downloadOrganization())
+//                .concatWith(mRepository.downloadPerson())
+//                .subscribe(new Observer<Item>(){
+//
+//                  @Override
+//                  public void onSubscribe(@NonNull Disposable d) {
+//                    textViewProgressUpdate.setText(R.string.loading_items);
+//                    textViewProgressUpdate.setVisibility(View.VISIBLE);
+//                    progressBar.setVisibility(View.VISIBLE);
+//                  }
+//
+//                  @Override
+//                  public void onNext(@NonNull Item item) {
+//                    Log.d(TAG,"Loaded " + item.getItemTypeName() + " --> " + item.toString());
+//                  }
+//
+//
+//                  @Override
+//                  public void onError(@NonNull Throwable e) {
+//                    textViewProgressUpdate.setText(R.string.load_data_error_title);
+//                    progressBar.setVisibility(View.GONE);
+//                    AlertDialog.Builder builder = new AlertDialog.Builder(RegistrationActivity.this);
+//                    builder.setTitle(R.string.load_data_error_title)
+//                            .setMessage(e.getLocalizedMessage())
+//                            .setPositiveButton(R.string.ok_button_label,(dialog , id) -> {
+//                              // just close the dialog
+//                            });
+//                    Log.d(TAG,"Error Loading Data: " + e.getLocalizedMessage());
+//                    e.printStackTrace();
+//                  }
+//
+//                  @Override
+//                  public void onComplete() {
+//                    textViewProgressUpdate.setText(R.string.load_item_message_complete);
+//                    textViewProgressUpdate.setVisibility(View.VISIBLE);
+//                    progressBar.setVisibility(View.GONE);
+//                  }
+//                });
 
 
       }

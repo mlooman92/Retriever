@@ -2,10 +2,19 @@ package com.matthewlooman.retriever.model;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Index;
 
 import java.util.UUID;
 
-@Entity(tableName="Transition")
+@Entity(tableName="Transition"
+        ,indices={@Index(value={"transition_from_state_name"
+                              , "transition_to_state_name"
+                              , "transition_reason_name"
+                              }
+                              , unique=true
+                       )
+                }
+       )
 public class Transition extends Item {
   @ColumnInfo(name="transition_item_type_name") private String transitionItemTypeName;
   @ColumnInfo(name="transition_from_state_name") private String transitionFromStateName;
